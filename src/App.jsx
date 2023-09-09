@@ -37,13 +37,14 @@ function formatDay(dateStr) {
 class App extends Component {
 
   state = {
-    location: 'lisbon',
+    location: '',
     isLoading: false,
     displayLocation: '',
     weather: {},
   }
 
   fetchWeather = async() => {
+    if(this.state.location.length < 2) return this.setState({weather: {}});
     try {
       this.setState({isLoading: true});
       // 1) Getting location (geocoding)
@@ -76,12 +77,23 @@ class App extends Component {
 
   setLocation = (e) => this.setState({location: e.target.value})
 
+  componentDidMount(){
+    //this.fetchWeather();
+    this.setState({location: localStorage.getItem('location') || ''})
+  }
+
+  componentDidUpdate(prevProps, prevState){
+    if(this.state.location !== prevState.location){
+      this.fetchWeather();
+      localStorage.setItem('location', JSON.stringify(this.state.location))
+    }
+  }
+
   render() {
     return (
       <div className='app'>
         <h1>Classy Weather</h1>
         <Input loaction={this.state.location} onChangeLocation={this.setLocation} />
-        <button onClick={this.fetchWeather}>Get weather</button>
         {this.state.isLoading && <p className='loader'>Loading...</p>}
         {
           this.state.weather.weathercode && 
@@ -113,6 +125,10 @@ class Input extends Component {
 }
 
 class Weather extends Component {
+  componentWillUnmount() {
+    console.log('Weather will unmount');
+  }
+
   render(){
     const {
       temperature_2m_max: max, 
